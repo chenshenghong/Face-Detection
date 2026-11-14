@@ -1,0 +1,34 @@
+name: Offline Source Syntax
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    name: Verify offline source syntax
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /faceDetection-image.py
+            /faceDetection-video.py
+      - name: Check source syntax
+        run: |
+          test "$GITHUB_REPOSITORY" = chenshenghong/Face-Detection
+          python3 - <<'PYSYNTAX'
+          import ast
+          from pathlib import Path
+          for name in ('faceDetection-image.py', 'faceDetection-video.py'):
+              ast.parse(Path(name).read_bytes(), filename=name)
+          PYSYNTAX
